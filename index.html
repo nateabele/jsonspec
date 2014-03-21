@@ -99,38 +99,156 @@
           prior knowledge of its design or intent.
         </p>
 
-<pre class="hidden"><code>$ cd your_repo_root/repo_name
-$ git fetch origin
-$ git checkout gh-pages
+        <h3>
+          <a name="basics" class="anchor" href="#basics"><span class="octicon octicon-link"></span></a>
+          The Basics
+        </h3>
+
+        <p>This is a typical API request/response pair:</p>
+
+<pre><code>GET /articles HTTP/1.1
+Accept: application/json
 </code></pre>
 
-        <div class="hidden">
-        <p>If you're using the GitHub for Mac, simply sync your repository and you'll see the new branch.</p>
+<br />
+
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/json;charset=UTF-8
+
+[
+  {
+    "id": 1,
+    "title": "The Hearth and the Salamander",
+    "body": "...",
+    "author": { "name": "Howard Roark" }
+  },
+  {
+    "id": 2,
+    "title": "The Sieve and the Sand",
+    "body": "...",
+    "author": { "name": "Dominique Francon" }
+  },
+  {
+    "id": 3,
+    "title": "Burning Bright",
+    "body": "...",
+    "author": { "name": "Archibald Ogden" }
+  }
+]
+</code></pre>
+
+        <p>And this is a JSONSpec-compliant API request/response pair:</p>
+
+<pre><code>GET /articles HTTP/1.1
+Accept: application/<strong>spec+json</strong>
+</code></pre>
+
+<br />
+
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/spec+json;charset=UTF-8
+<strong>Link: http://example.com/articles; rel="self",
+      http://example.com/_schemas/article; rel="schema"</strong>
+
+[
+  {
+    "title": "The Hearth and the Salamander",
+    <strong>"articleBody"</strong>: "...",
+    "author": {
+      "name": "Howard Roark",
+      <strong>"$links": {
+        "self": { "href": "http://example.com/people/roark" }
+      }</strong>
+    },
+    <strong>"$links": {
+      "self": { "href": "http://example.com/articles/1" },
+      "comments": { "href": "http://example.com/articles/1/comments" }
+    }</strong>
+  },
+  {
+    "title": "The Sieve and the Sand",
+    <strong>"articleBody"</strong>: "...",
+    "author": {
+      "name": "Dominique Francon",
+      <strong>"$links": {
+        "self": { "href": "http://example.com/people/francon" }
+      }</strong>
+    },
+    <strong>"$links": {
+      "self": { "href": "http://example.com/articles/2" },
+      "comments": { "href": "http://example.com/articles/2/comments" }
+    }</strong>
+  },
+  {
+    "title": "Burning Bright",
+    <strong>"articleBody"</strong>: "...",
+    "author": {
+      "name": "Archibald Ogden",
+      <strong>"$links": {
+        "self": { "href": "http://example.com/people/ogden" }
+      }</strong>
+    },
+    <strong>"$links": {
+      "self": { "href": "http://example.com/articles/3" },
+      "comments": { "href": "http://example.com/articles/3/comments" }
+    }</strong>
+  }
+]
+</code></pre>
 
         <h3>
-        <a name="designer-templates" class="anchor" href="#designer-templates"><span class="octicon octicon-link"></span></a>Designer Templates</h3>
+          <a name="structure" class="anchor" href="#structure"><span class="octicon octicon-link"></span></a>
+          Structure
+        </h3>
 
-        <p>We've crafted some handsome templates for you to use. Go ahead and continue to layouts to browse through them. You can easily go back to edit your page before publishing. After publishing your page, you can revisit the page generator and switch to another theme. Your Page content will be preserved if it remained markdown format.</p>
+        <p>
+          JSONSpec deals with JSON <em>documents</em> and <em>collections</em>. Every response is expected
+          to be one of these:
+
+          <ul>
+            <li><strong>Document</strong> &mdash; A document is a valid, well-formed JSON data structure that
+            begins with <code>{</code> and ends with <code>}</code></li>
+            <li><strong>Collection</strong> &mdash; A collection is a JSON array structure that
+            begins with <code>[</code> and ends with <code>]</code>, where each array element is a document</li>
+          </ul>
+        </p>
 
         <h3>
-        <a name="rather-drive-stick" class="anchor" href="#rather-drive-stick"><span class="octicon octicon-link"></span></a>Rather Drive Stick?</h3>
+          <a name="linking" class="anchor" href="#linking"><span class="octicon octicon-link"></span></a>
+          Linking
+        </h3>
 
-        <p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator written by our own Tom Preston-Werner. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+        <p>
+          JSONSpec links are defined in a <code>$links</code> object at the top level of a document. Each field of the <code>$links</code>
+          object is a named hypermedia link to another HTTP resource. Each link <strong>must</strong> contain an
+          <code>href</code> field, and <strong>may</strong> contain a <code>title</code> and <code>description</code>
+          to identify and explain the resource/relationship. A link object may also contain a <code>type</code> field
+          to indicate the media type of the target resource.
+        </p>
 
-        <h3>
-        <a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+        <p>Example:
+        <pre><code>{
+  "$links": {
+    "related": {
+      "href": "http://example.com/related/resource",
+      "title": "A related resource",
+      "type": "application/spec+json"
+    }
+  }
+}</code></pre>
 
-        <p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor's GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+        <p>Every JSONSpec response must contain at least two links: <code>self</code> and <code>schema</code>.</p>
 
-        <h3>
-        <a name="support-or-contact" class="anchor" href="#support-or-contact"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
-
-        <p>Having trouble with Pages? Check out the documentation at <a href="http://help.github.com/pages">http://help.github.com/pages</a> or contact <a href="mailto:support@github.com">support@github.com</a> and we’ll help you sort it out.</p>
-        </div>
+        <p>
+          <ul>
+            <li><code>self</code> &mdash; Specifies the canonical link to the resource</li>
+            <li><code>schema</code> &mdash; Specifies the link to the JSONSpec-compliant schema definition that explains the resource</li>
+          </ul>
+        </p>
       </section>
     </div>
 
-    <!-- FOOTER  -->
+
     <div id="footer_wrap" class="outer">
       <footer class="inner">
         <p class="copyright">JSONSpec was handwritten with love by <a href="https://github.com/nateabele">Nate Abele</a></p>
